@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.relily.system.mapper.CosmeticsExpressMapper">
+    
+    <resultMap type="CosmeticsExpress" id="CosmeticsExpressResult">
+        <result property="id"             column="id"                />
+        <result property="appointmentId"  column="appointment_id"    />
+        <result property="orderNo"        column="order_no"          />
+        <result property="expressCompany" column="express_company"   />
+        <result property="expressNo"      column="express_no"        />
+        <result property="trackStatus"    column="track_status"      />
+        <result property="isSigned"       column="is_signed"         />
+        <result property="trackInfo"      column="track_info"        />
+        <result property="lastQueryTime"  column="last_query_time"   />
+        <result property="createBy"       column="create_by"         />
+        <result property="createTime"     column="create_time"       />
+        <result property="updateBy"       column="update_by"         />
+        <result property="updateTime"     column="update_time"       />
+    </resultMap>
+
+    <select id="selectCosmeticsExpressByOrderNo" parameterType="String" resultMap="CosmeticsExpressResult">
+        select id, appointment_id, order_no, express_company, express_no,
+               track_status, is_signed, track_info, last_query_time,
+               create_by, create_time, update_by, update_time
+        from cosmetics_express_track
+        where order_no = #{orderNo}
+        limit 1
+    </select>
+
+    <insert id="insertCosmeticsExpress" parameterType="CosmeticsExpress" useGeneratedKeys="true" keyProperty="id">
+        insert into cosmetics_express_track (
+            appointment_id, order_no, express_company, express_no,
+            track_status, is_signed, track_info, last_query_time, create_by
+        ) values (
+            #{appointmentId}, #{orderNo}, #{expressCompany}, #{expressNo},
+            #{trackStatus}, #{isSigned}, #{trackInfo}, #{lastQueryTime},
+            <if test="createBy != null and createBy != ''">#{createBy}</if><if test="createBy == null">'system'</if>
+        )
+    </insert>
+
+    <update id="updateCosmeticsExpress" parameterType="CosmeticsExpress">
+        update cosmetics_express_track
+        <set>
+            <if test="trackStatus != null and trackStatus != ''">track_status = #{trackStatus},</if>
+            <if test="isSigned != null and isSigned != ''">is_signed = #{isSigned},</if>
+            <if test="trackInfo != null">track_info = #{trackInfo},</if>
+            <if test="lastQueryTime != null">last_query_time = #{lastQueryTime},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where order_no = #{orderNo}
+    </update>
+
+</mapper>

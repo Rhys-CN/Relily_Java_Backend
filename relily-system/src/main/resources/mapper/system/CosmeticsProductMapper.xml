@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.relily.system.mapper.CosmeticsProductMapper">
+    
+    <resultMap type="CosmeticsProduct" id="CosmeticsProductResult">
+        <result property="id"            column="id"              />
+        <result property="version"       column="version"         />
+        <result property="goodsName"     column="goods_name"      />
+        <result property="category"      column="category"        />
+        <result property="brand"         column="brand"           />
+        <result property="price"         column="price"           />
+        <result property="stock"         column="stock"           />
+        <result property="conditionLevel" column="condition_level" />
+        <result property="image"         column="image"           />
+        <result property="description"   column="description"     />
+        <result property="notice"        column="notice"          />
+        <result property="status"        column="status"          />
+        <result property="sellerId"      column="seller_id"       />
+        <result property="sellerName"    column="seller_name"     />
+        <result property="delFlag"       column="del_flag"        />
+        <result property="createBy"      column="create_by"       />
+        <result property="createTime"    column="create_time"     />
+        <result property="updateBy"      column="update_by"       />
+        <result property="updateTime"    column="update_time"     />
+        <result property="remark"        column="remark"          />
+    </resultMap>
+
+    <sql id="selectCosmeticsProductVo">
+        select id, version, goods_name, category, brand, price, stock, condition_level,
+               image, description, notice, status, seller_id, seller_name, del_flag,
+               create_by, create_time, update_by, update_time, remark
+        from cosmetics_product
+    </sql>
+
+    <select id="selectCosmeticsProductById" parameterType="Long" resultMap="CosmeticsProductResult">
+        <include refid="selectCosmeticsProductVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectCosmeticsProductList" parameterType="CosmeticsProduct" resultMap="CosmeticsProductResult">
+        <include refid="selectCosmeticsProductVo"/>
+        <where>
+            del_flag = '0'
+            <if test="goodsName != null and goodsName != ''"> AND goods_name like concat('%', #{goodsName}, '%')</if>
+            <if test="category != null and category != ''"> AND category = #{category}</if>
+            <if test="brand != null and brand != ''"> AND brand like concat('%', #{brand}, '%')</if>
+            <if test="conditionLevel != null and conditionLevel != ''"> AND condition_level = #{conditionLevel}</if>
+            <if test="status != null and status != ''"> AND status = #{status}</if>
+            <if test="sellerId != null"> AND seller_id = #{sellerId}</if>
+            <if test="sellerName != null and sellerName != ''"> AND seller_name like concat('%', #{sellerName}, '%')</if>
+        </where>
+        order by id desc
+    </select>
+
+    <insert id="insertCosmeticsProduct" parameterType="CosmeticsProduct" useGeneratedKeys="true" keyProperty="id">
+        insert into cosmetics_product (
+            version, goods_name, category, brand, price, stock, condition_level,
+            image, description, notice, status, seller_id, seller_name, del_flag,
+            create_by, remark
+        ) values (
+            <if test="version != null">#{version},</if><if test="version == null">0,</if>
+            #{goodsName}, #{category}, #{brand}, #{price}, #{stock}, #{conditionLevel},
+            #{image}, #{description}, #{notice}, #{status}, #{sellerId}, #{sellerName}, '0',
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            #{remark}
+        )
+    </insert>
+
+    <update id="updateCosmeticsProduct" parameterType="CosmeticsProduct">
+        update cosmetics_product
+        <set>
+            <if test="goodsName != null and goodsName != ''">goods_name = #{goodsName},</if>
+            <if test="category != null">category = #{category},</if>
+            <if test="brand != null">brand = #{brand},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="stock != null">stock = #{stock},</if>
+            <if test="conditionLevel != null and conditionLevel != ''">condition_level = #{conditionLevel},</if>
+            <if test="image != null">image = #{image},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="notice != null">notice = #{notice},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="updateCosmeticsProductByVersion" parameterType="CosmeticsProduct">
+        update cosmetics_product
+        <set>
+            <if test="goodsName != null and goodsName != ''">goods_name = #{goodsName},</if>
+            <if test="category != null">category = #{category},</if>
+            <if test="brand != null">brand = #{brand},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="stock != null">stock = #{stock},</if>
+            <if test="conditionLevel != null and conditionLevel != ''">condition_level = #{conditionLevel},</if>
+            <if test="image != null">image = #{image},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="notice != null">notice = #{notice},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate(),
+            version = version + 1
+        </set>
+        where id = #{id} and version = #{version}
+    </update>
+
+    <update id="deductStock">
+        update cosmetics_product
+        set stock = stock - #{quantity}, version = version + 1
+        where id = #{goodsId} and status = '0' and stock >= #{quantity}
+    </update>
+
+    <update id="rollbackStock">
+        update cosmetics_product
+        set stock = stock + #{quantity}, version = version + 1
+        where id = #{goodsId}
+    </update>
+
+    <delete id="deleteCosmeticsProductById" parameterType="Long">
+        update cosmetics_product set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteCosmeticsProductByIds" parameterType="Long">
+        update cosmetics_product set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>
